@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Recommendation Result</title>
+</head>
+
+<body>
+    <h2>Predicted Genre: {{ genre }}</h2>
+    <h3>Recommended YouTube links:</h3>
+    <ul>
+        {% for link in links %}
+        <li><a href="{{ link }}" target="_blank">{{ link }}</a></li>
+        {% endfor %}
+    </ul>
+</body>
+
+</html>
