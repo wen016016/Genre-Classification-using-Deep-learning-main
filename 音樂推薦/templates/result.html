@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Recommendation Result</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f9f9f9;
+            text-align: center;
+            padding-top: 50px;
+            margin: 0;
+        }
+
+        .results-container {
+            background: #fff;
+            width: 50%;
+            margin: 0 auto;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 4px;
+        }
+
+        h2,
+        h3 {
+            color: #333;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        li {
+            margin: 10px 0;
+            padding: 10px;
+            background: #f2f2f2;
+            border-radius: 4px;
+            transition: background-color 0.3s ease;
+        }
+
+        li:hover {
+            background: #e2e2e2;
+        }
+
+        a {
+            text-decoration: none;
+            color: #007bff;
+            transition: color 0.3s ease;
+        }
+
+        a:hover {
+            color: #0056b3;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="results-container">
+        <h2>Predicted Genre: {{ genre }}</h2>
+
+        <h3>Recommended YouTube Videos:</h3>
+        <ul>
+            {% for link in youtube_links %}
+            <li><a href="{{ link }}" target="_blank">{{ link }}</a></li>
+            {% endfor %}
+        </ul>
+
+        <h3>Recommended Spotify Tracks:</h3>
+        {% if spotify_links %}
+        <ul>
+            {% for link in spotify_links %}
+            <li><a href="{{ link }}" target="_blank">{{ link }}</a></li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p>No Spotify recommendations found.</p>
+        {% endif %}
+    </div>
+</body>
+
+</html>

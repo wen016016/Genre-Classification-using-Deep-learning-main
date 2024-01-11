@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Spotify Recommendation Result</title>
+    <!-- 添加您的样式 -->
+</head>
+
+<body>
+    <h2>Spotify Recommended Tracks</h2>
+    <ul>
+        {% for link in links %}
+        <li><a href="{{ link }}" target="_blank">{{ link }}</a></li>
+        {% endfor %}
+    </ul>
+</body>
+
+</html>
