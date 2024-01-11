@@ -89,8 +89,8 @@ def build_model():
     return model
 
 
-model = build_model()  # 创建模型实例
-model.load_weights('100_epoch_tr_GRU6.cpkt')  # 加载权重
+model = build_model()  # 創建模型
+model.load_weights('100_epoch_tr_GRU6.cpkt')  # 加載權重
 
 
 # def preprocess_audio_to_image(filepath):
@@ -120,11 +120,9 @@ model.load_weights('100_epoch_tr_GRU6.cpkt')  # 加载权重
 def preprocess_audio_to_image(filepath):
     # 加载音频文件
     x, sr = librosa.load(filepath)
-
-    # 使用第二段代码中的方法生成频谱图
     X = librosa.stft(x)
     Xdb = librosa.amplitude_to_db(abs(X))
-    Xdb = cv2.resize(Xdb, (256, 256))  # 确保尺寸与模型输入匹配
+    Xdb = cv2.resize(Xdb, (256, 256))  # 確保尺寸跟模型相符
     Xdb_normalized = (Xdb - np.min(Xdb)) / (np.max(Xdb) - np.min(Xdb))
     image_input = cv2.merge([Xdb_normalized, Xdb_normalized, Xdb_normalized])
 
@@ -132,26 +130,25 @@ def preprocess_audio_to_image(filepath):
 
 
 def predict_genre(filepath):
-    # 将音频文件预处理为图像格式
+    # 將音頻作預處理成圖像
     image_input = preprocess_audio_to_image(filepath)
-    # 添加一个批次维度，因为模型预测需要批量数据
+    # 添加一個維度
     input_data = np.expand_dims(image_input, axis=0)
-    # 使用模型进行预测
+    # 使用預測
     predictions = model.predict(input_data)
-    # 解码预测结果
+    # 預測结果
     genre = decode_predictions(predictions)
     return genre
 
 
 def decode_predictions(predictions):
     genres = ['blues', 'classical', 'country', 'disco', 'hiphop',
-              'jazz', 'metal', 'pop', 'reggae', 'rock']  # 音乐类别列表
+              'jazz', 'metal', 'pop', 'reggae', 'rock']
     predicted_index = np.argmax(predictions)
     return genres[predicted_index]
 
 
 # 根據音樂類型返回推薦的YouTube連結
-
 
 def get_youtube_links(genre, max_results=5):
     # You need to get this from the Google Cloud Console.
