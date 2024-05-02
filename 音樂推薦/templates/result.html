@@ -14,7 +14,7 @@
 
         .results-container {
             background: #fff;
-            width: 50%;
+            width: 70%;
             margin: 0 auto;
             padding: 20px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
@@ -24,6 +24,7 @@
         h2,
         h3 {
             color: #333;
+            margin-top: 20px;
         }
 
         ul {
@@ -37,6 +38,8 @@
             background: #f2f2f2;
             border-radius: 4px;
             transition: background-color 0.3s ease;
+            display: flex;
+            align-items: center;
         }
 
         li:hover {
@@ -47,35 +50,87 @@
             text-decoration: none;
             color: #007bff;
             transition: color 0.3s ease;
+            display: flex;
+            align-items: center;
         }
 
         a:hover {
             color: #0056b3;
+        }
+
+        .preview-image {
+            width: 100px;
+            height: auto;
+            margin-right: 10px;
+        }
+
+        .video-link,
+        .track-link {
+            text-decoration: none;
+            color: #007bff;
+            display: block;
+            margin: 10px auto;
+            width: 80%;
+            /* 控制链接宽度 */
+            text-align: center;
+            /* 居中对齐 */
+        }
+
+        .video-link:hover,
+        .track-link:hover {
+            color: #0056b3;
+        }
+
+        /* 调整列表项样式 */
+        .track-item {
+            margin: 10px auto;
+            padding: 10px;
+            background: #f2f2f2;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            width: 80%;
+            text-align: center;
+        }
+
+        .track-item:hover {
+            background: #e2e2e2;
         }
     </style>
 </head>
 
 <body>
     <div class="results-container">
-        <h2>Predicted Genre: {{ genre }}</h2>
+        <h3>Predicted Genre: {{ genre }}</h3>
+        <h3>Selected Region & Time Range: {{ region }} & {{ time_range }}</h3>
 
-        <h3>Recommended YouTube Videos:</h3>
+        <h2>Recommended YouTube Videos:</h2>
         <ul>
-            {% for link in youtube_links %}
-            <li><a href="{{ link }}" target="_blank">{{ link }}</a></li>
-            {% endfor %}
+            <div style="text-align: center;">
+                {% for link, preview_image in youtube_links %}
+                <div class="video-link">
+                    <a href="{{ link }}" target="_blank">
+                        <img src="{{ preview_image }}" alt="Preview" class="preview-image">
+                        {{ link }}
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
         </ul>
 
-        <h3>Recommended Spotify Tracks:</h3>
-        {% if spotify_links %}
-        <ul>
-            {% for link in spotify_links %}
-            <li><a href="{{ link }}" target="_blank">{{ link }}</a></li>
-            {% endfor %}
-        </ul>
-        {% else %}
-        <p>No Spotify recommendations found.</p>
-        {% endif %}
+        <h2>Recommended Spotify Tracks:</h2>
+        <div style="text-align: center;">
+            {% if spotify_links %}
+            <ul>
+                {% for link in spotify_links %}
+                <li class="track-item">
+                    <a href="{{ link }}" target="_blank" class="track-link">{{ link }}</a>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p>No Spotify recommendations found.</p>
+            {% endif %}
+        </div>
     </div>
 </body>
 

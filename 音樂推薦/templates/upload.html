@@ -53,8 +53,19 @@
         <h2>Upload Music</h2>
         <form action="/" method="post" enctype="multipart/form-data">
             <input type="file" name="file">
+            <select name="region">
+                <option value="English">English</option>
+                <option value="Japanese">Japanese</option>
+                <option value="Korean">Korean</option>
+                <option value="Chinese">Chinese</option>
+                <option value="Russian">Russian</option>
+            </select>
+            <select name="time_range">
+                <option value="week">一周內新歌</option>
+                <option value="month">一個月內新歌</option>
+                <option value="year">一年內新歌</option>
+            </select>
             <input type="submit" value="Upload">
-        </form>
     </div>
 </body>
 

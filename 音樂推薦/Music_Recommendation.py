@@ -17,6 +17,8 @@ from sklearn.metrics import classification_report
 import librosa.display
 import requests
 import cv2
+import matplotlib.pyplot as plt
+import os
 
 # 配置Flask應用程序
 app = Flask(__name__)
@@ -51,10 +53,15 @@ def upload_file():
         if file and allowed_file(file.filename):
             filepath = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
             file.save(filepath)
-
+            # 預測音樂流派
             predicted_genre = predict_genre(filepath)
-            recommended_links = get_youtube_links(predicted_genre)
-            # 获取Spotify推荐链接
+            # 獲取用戶選擇地區以及時間範圍
+            region = request.form['region']
+            time_range = request.form['time_range']
+            # 根據流派和用戶選擇的地區來給 YouTube 連結
+            recommended_links = get_youtube_links(
+                predicted_genre, region, time_range)
+            # 獲取Spotify連結
             try:
                 spotify_results = sp.recommendations(
                     seed_genres=[predicted_genre], limit=5)
@@ -65,7 +72,7 @@ def upload_file():
                 spotify_links = []  # 如果出现错误，设置为空列表
 
             # 向模板传递YouTube和Spotify链接
-            return render_template('result.html', genre=predicted_genre, youtube_links=recommended_links, spotify_links=spotify_links)
+            return render_template('result.html', genre=predicted_genre, youtube_links=recommended_links, spotify_links=spotify_links, region=region, time_range=time_range)
     return render_template('upload.html')
 
 # 2. 加载預先訓練的模型
@@ -93,40 +100,20 @@ model = build_model()  # 創建模型
 model.load_weights('100_epoch_tr_GRU6.cpkt')  # 加載權重
 
 
-# def preprocess_audio_to_image(filepath):
-#     # 加载音频文件
-#     x, sr = librosa.load(filepath)
-#     # 提取音频特征（例如 STFT）
-#     X = librosa.stft(x)
-#     Xdb = librosa.amplitude_to_db(abs(X))
-#     # 调整特征的尺寸以匹配模型输入
-#     resized_Xdb = cv2.resize(Xdb, (256, 256))
-#     # 转换为3通道图像（如果模型需要三通道输入）
-#     image_input = np.repeat(resized_Xdb[..., np.newaxis], 3, axis=-1)
-#     return image_input
-
-# def predict_genre(filepath):
-#     # 将音频文件预处理为图像格式
-#     image_input = preprocess_audio_to_image(filepath)
-#     # 添加一个批次维度，因为模型预测需要批量数据
-#     input_data = np.expand_dims(image_input, axis=0)
-#     # 使用模型进行预测
-#     predictions = model.predict(input_data)
-#     # 解码预测结果
-#     genre = decode_predictions(predictions)
-#     return genre
-
-
 def preprocess_audio_to_image(filepath):
     # 加载音频文件
     x, sr = librosa.load(filepath)
     X = librosa.stft(x)
     Xdb = librosa.amplitude_to_db(abs(X))
-    Xdb = cv2.resize(Xdb, (256, 256))  # 確保尺寸跟模型相符
-    Xdb_normalized = (Xdb - np.min(Xdb)) / (np.max(Xdb) - np.min(Xdb))
-    image_input = cv2.merge([Xdb_normalized, Xdb_normalized, Xdb_normalized])
-
-    return image_input
+    librosa.display.specshow(Xdb)
+    temp_image_path = 'temp_image.png'
+    plt.savefig(temp_image_path)
+    plt.close()
+   # 使用cv2.imread读取保存的图像文件，并转换为RGB格式
+    img_arr = cv2.imread(temp_image_path)[..., ::-1]
+    # 调整图像大小
+    resized_arr = cv2.resize(img_arr, (256, 256))
+    return resized_arr
 
 
 def predict_genre(filepath):
@@ -144,20 +131,31 @@ def predict_genre(filepath):
 def decode_predictions(predictions):
     genres = ['blues', 'classical', 'country', 'disco', 'hiphop',
               'jazz', 'metal', 'pop', 'reggae', 'rock']
-    predicted_index = np.argmax(predictions)
+    predicted_index = np.argmax(predictions, axis=1)[0]
     return genres[predicted_index]
 
 
 # 根據音樂類型返回推薦的YouTube連結
 
-def get_youtube_links(genre, max_results=5):
+def get_youtube_links(genre, region, time_range,  max_results=5):
     # You need to get this from the Google Cloud Console.
     API_KEY = 'AIzaSyCogkMHWVJQbp2pdzSCwzQa4rgSFMOUElI'
     YOUTUBE_SEARCH_URL = 'https://www.googleapis.com/youtube/v3/search'
-
+    if region == 'English':
+        search_query = 'English' + genre + ' music' + time_range
+    elif region == 'Japanese':
+        search_query = 'Japanese' + genre + ' 音楽' + time_range
+    elif region == 'Korean':
+        search_query = 'Korean' + genre + ' 음악' + time_range
+    elif region == 'Chinese':
+        search_query = 'Chinese' + genre + ' 音樂' + time_range
+    elif region == 'Russian':
+        search_query = 'Russian' + genre + ' музыка' + time_range
+    else:
+        search_query = genre + ' music'  # 默认为英文音乐
     params = {
         'part': 'snippet',
-        'q': genre + ' music',
+        'q': search_query,  # 使用search_query变量
         'type': 'video',
         'key': API_KEY,
         'maxResults': max_results
@@ -165,10 +163,22 @@ def get_youtube_links(genre, max_results=5):
 
     response = requests.get(YOUTUBE_SEARCH_URL, params=params)
     data = response.json()
-    video_links = ['https://www.youtube.com/watch?v=' +
-                   item['id']['videoId'] for item in data['items']]
 
-    return video_links
+    # 创建空列表来存储链接和预览图像的元组
+    video_links_with_preview = []
+
+    # 遍历搜索结果
+    for item in data['items']:
+        video_id = item['id']['videoId']
+        video_link = f'https://www.youtube.com/watch?v={video_id}'
+
+        # 获取预览图像的 URL
+        preview_image_url = item['snippet']['thumbnails']['default']['url']
+
+        # 将视频链接和预览图像 URL 组成元组，添加到列表中
+        video_links_with_preview.append((video_link, preview_image_url))
+
+    return video_links_with_preview
 
 
 if __name__ == "__main__":
